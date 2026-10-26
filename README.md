@@ -124,8 +124,12 @@ The API is mounted at `/api/clubs` and accepts/returns standard JSON:
 | **POST** | `/api/clubs` | Create a new campus club | JSON object with required fields | `201 Created` | `400`, `500` |
 | **PUT** | `/api/clubs/:id` | Update an existing club by ID | JSON object with fields to update | `200 OK` | `400`, `404`, `500` |
 | **DELETE**| `/api/clubs/:id` | Delete a club by ID | None | `200 OK` | `400`, `404`, `500` |
+| **POST** | `/api/memberships` | Join a club (with duplicate check) | `{ clubId, studentName, studentId, email }` | `201 Created` | `400`, `404`, `500` |
+| **GET** | `/api/memberships` | Retrieve memberships (optional `?clubId=...`) | None | `200 OK` | `400`, `500` |
 
-### Club Data Schema Fields:
+### Data Schema Definitions:
+
+#### 1. Club Model (`backend/models/Club.js`):
 ```json
 {
   "name": "Robotics Club",
@@ -136,6 +140,18 @@ The API is mounted at `/api/clubs` and accepts/returns standard JSON:
   "description": "Hands-on robotics, microcontrollers, and automation workshops."
 }
 ```
+
+#### 2. Membership Model (`backend/models/Membership.js`):
+```json
+{
+  "clubId": "64f123... (ObjectId ref 'Club')",
+  "studentName": "Maya Sharma",
+  "studentId": "STU202601",
+  "email": "maya.sharma@campus.edu",
+  "joinedAt": "2026-10-26T08:00:00.000Z"
+}
+```
+*Note: A compound unique index `{ clubId: 1, studentId: 1 }` is enforced at the MongoDB database level to ensure a student cannot join the same club more than once.*
 
 ---
 
@@ -158,9 +174,10 @@ This script automatically runs through:
 ### Manual Browser Walkthrough
 1. **CREATE:** Go to `http://localhost:5000/add-club.html`, fill out the form, and click **Create Club**. A green confirmation banner will appear.
 2. **READ (All):** Click **Browse Clubs Directory** or visit `http://localhost:5000/clubs.html`. Your newly created club will be visible as a card.
-3. **READ (One):** Click **View Details** on any card to view `http://localhost:5000/club-details.html?id=...`. All fields are displayed.
-4. **UPDATE:** Click **Edit** from either the card or the details view (`http://localhost:5000/edit-club.html?id=...`). Update the meeting time or president name and click **Save Changes**.
-5. **DELETE:** On `clubs.html` or `club-details.html`, click **Delete**. Confirm the deletion in the modal dialog. The club is removed and the counter decrements.
+3. **READ (One):** Click **View Details** on any card to view `http://localhost:5000/club-details.html?id=...`. All fields and registered members are displayed.
+4. **JOIN CLUB:** On `club-details.html`, click **Join Club**. A modal opens asking for your Full Name, Student ID, and Email. Enter your information and click **Confirm & Join**. The member counter updates and your name appears in the member list. Attempting to submit the same Student ID for the same club will show a duplicate prevention error.
+5. **UPDATE:** Click **Edit** from either the card or the details view (`http://localhost:5000/edit-club.html?id=...`). Update the meeting time or president name and click **Save Changes**.
+6. **DELETE:** On `clubs.html` or `club-details.html`, click **Delete**. Confirm the deletion in the modal dialog. The club is removed and the counter decrements.
 
 ---
 

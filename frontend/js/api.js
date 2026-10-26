@@ -132,3 +132,48 @@ async function deleteClub(id) {
     throw error;
   }
 }
+
+/**
+ * 6. Join a club (Submit membership request)
+ * HTTP Method: POST /api/memberships
+ * @param {Object} membershipData - { clubId, studentName, studentId, email }
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+async function joinClub(membershipData) {
+  try {
+    const res = await fetch('/api/memberships', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(membershipData)
+    });
+    return await handleResponse(res);
+  } catch (error) {
+    console.error('[API Error] joinClub failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * 7. Retrieve memberships for a club
+ * HTTP Method: GET /api/memberships?clubId=...
+ * @param {string} [clubId]
+ * @returns {Promise<{success: boolean, count: number, data: Array}>}
+ */
+async function getClubMemberships(clubId) {
+  try {
+    const url = clubId
+      ? `/api/memberships?clubId=${encodeURIComponent(clubId)}`
+      : '/api/memberships';
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    return await handleResponse(res);
+  } catch (error) {
+    console.error('[API Error] getClubMemberships failed:', error);
+    throw error;
+  }
+}

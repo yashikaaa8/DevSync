@@ -9,7 +9,10 @@ const path = require('path');
 const { spawn } = require('child_process');
 const mongoose = require('mongoose');
 
-const MONGOD_PATH = 'C:\\Program Files\\MongoDB\\Server\\8.3\\bin\\mongod.exe';
+const LOCAL_BIN_MONGOD = path.join(__dirname, '../bin/mongod.exe');
+const MONGOD_PATH = fs.existsSync(LOCAL_BIN_MONGOD)
+  ? LOCAL_BIN_MONGOD
+  : 'C:\\Program Files\\MongoDB\\Server\\8.3\\bin\\mongod.exe';
 const DB_PATH = path.join(__dirname, '../data/db');
 const PORT = 5000;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -302,6 +305,63 @@ async function main() {
     }
   } catch (err) {
     fail('404 confirmation check failed', err.message);
+  }
+
+  // Test: POST /api/memberships (Join Club)
+  totalTests++;
+  try {
+    const clubsList = await Club.find();
+    const targetClub = clubsList[0];
+    const joinRes = await fetch(`${BASE_URL}/api/memberships`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clubId: targetClub._id.toString(),
+        studentName: 'Verification Student',
+        studentId: 'VERIF101',
+        email: 'verif.student@campus.edu'
+      })
+    });
+    const joinData = await joinRes.json();
+    if (joinRes.status === 201 && joinData.success === true && joinData.data.studentId === 'VERIF101') {
+      pass('POST /api/memberships registered new member (Status 201 Created)');
+      passedTests++;
+    } else {
+      fail('POST /api/memberships failed', JSON.stringify(joinData));
+    }
+
+    // Test: POST /api/memberships duplicate prevention
+    totalTests++;
+    const dupRes = await fetch(`${BASE_URL}/api/memberships`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clubId: targetClub._id.toString(),
+        studentName: 'Verification Student',
+        studentId: 'VERIF101',
+        email: 'verif.student@campus.edu'
+      })
+    });
+    const dupData = await dupRes.json();
+    if (dupRes.status === 400 && dupData.success === false) {
+      pass('POST /api/memberships duplicate registration correctly rejected (Status 400 Bad Request)');
+      passedTests++;
+    } else {
+      fail('POST /api/memberships duplicate was not rejected with 400', dupRes.status);
+    }
+
+    // Test: GET /api/memberships?clubId=...
+    totalTests++;
+    const getMembRes = await fetch(`${BASE_URL}/api/memberships?clubId=${targetClub._id}`);
+    const getMembData = await getMembRes.json();
+    if (getMembRes.status === 200 && getMembData.success === true && getMembData.count >= 1) {
+      pass(`GET /api/memberships?clubId=... retrieved ${getMembData.count} member(s) (Status 200 OK)`);
+      passedTests++;
+    } else {
+      fail('GET /api/memberships?clubId failed');
+    }
+  } catch (err) {
+    fail('Membership tests failed', err.message);
   }
 
   // 6. Frontend Pages & Assets Verification

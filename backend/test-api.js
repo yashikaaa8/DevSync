@@ -222,6 +222,80 @@ const runTests = async () => {
   }
 
   // ---------------------------------------------------------------------------
+  // Test 9: POST /api/memberships (Join Club - Valid)
+  // ---------------------------------------------------------------------------
+  const MEMBERSHIPS_URL = `http://localhost:${PORT}/api/memberships`;
+  let sampleClubId = null;
+
+  try {
+    // Get an existing club ID to join
+    const clubsRes = await fetch(BASE_URL);
+    const clubsJson = await clubsRes.json();
+    if (clubsJson.data && clubsJson.data.length > 0) {
+      sampleClubId = clubsJson.data[0]._id;
+    }
+
+    if (sampleClubId) {
+      const joinPayload = {
+        clubId: sampleClubId,
+        studentName: 'Tanya Test Student',
+        studentId: 'STU9999',
+        email: 'tanya.test@campus.edu'
+      };
+
+      const res = await fetch(MEMBERSHIPS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(joinPayload)
+      });
+      const json = await res.json();
+
+      if (res.status === 201 && json.success === true && json.data._id) {
+        logPass(`POST /api/memberships registered new member "${json.data.studentName}" (Status 201 Created)`);
+        passed++;
+      } else {
+        logFail('POST /api/memberships', `Status ${res.status}, body: ${JSON.stringify(json)}`);
+        failed++;
+      }
+
+      // ---------------------------------------------------------------------------
+      // Test 10: POST /api/memberships (Duplicate Prevention Check)
+      // ---------------------------------------------------------------------------
+      const dupRes = await fetch(MEMBERSHIPS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(joinPayload) // Same studentId & clubId
+      });
+      const dupJson = await dupRes.json();
+
+      if (dupRes.status === 400 && dupJson.success === false) {
+        logPass(`POST /api/memberships properly rejected duplicate student ID with 400 Bad Request`);
+        passed++;
+      } else {
+        logFail('POST /api/memberships duplicate check', `Expected 400, got ${dupRes.status}`);
+        failed++;
+      }
+
+      // ---------------------------------------------------------------------------
+      // Test 11: GET /api/memberships?clubId=... (Filtered Memberships)
+      // ---------------------------------------------------------------------------
+      const filterRes = await fetch(`${MEMBERSHIPS_URL}?clubId=${sampleClubId}`);
+      const filterJson = await filterRes.json();
+
+      if (filterRes.status === 200 && filterJson.success === true && Array.isArray(filterJson.data)) {
+        logPass(`GET /api/memberships?clubId=... returned 200 OK with ${filterJson.count} member(s)`);
+        passed++;
+      } else {
+        logFail('GET /api/memberships filtered', `Status ${filterRes.status}`);
+        failed++;
+      }
+    }
+  } catch (err) {
+    logFail('Membership endpoints test', err.message);
+    failed++;
+  }
+
+  // ---------------------------------------------------------------------------
   // Summary
   // ---------------------------------------------------------------------------
   console.log(`\n${colors.cyan}====================================================`);

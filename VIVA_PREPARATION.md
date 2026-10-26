@@ -7,8 +7,8 @@ This guide is written in clear, simple English to help you confidently explain y
 
 ## 1. What This Project Does and Why It Was Built
 
-- **What it does:** The **Campus Club Management System** is a full-stack web application that allows students and college administrators to register, view, update, search, and delete student organizations and clubs.
-- **Why it was built:** In many colleges, student club notices and leadership contacts are disorganized or kept in static spreadsheets. This project creates a centralized digital portal where meeting times, club descriptions, student presidents, and categories are saved in a real database (MongoDB) and managed through a clean web interface.
+- **What it does:** The **Campus Club Management System** is a full-stack web application that allows students and college administrators to register, view, update, search, and delete student organizations. It also features a **Join Club** system where students can register as members of any club.
+- **Why it was built:** In many colleges, student club notices and leadership contacts are disorganized or kept in static spreadsheets. This project creates a centralized digital portal where meeting times, club descriptions, student presidents, categories, and registered student members are saved in a real database (MongoDB) and managed through a clean web interface.
 
 ---
 
@@ -17,7 +17,7 @@ This guide is written in clear, simple English to help you confidently explain y
 - **Frontend:** The part of the website that the user sees and interacts with in their web browser (HTML structure, CSS styling, and client-side JavaScript).
 - **Backend:** The behind-the-scenes engine running on the server (Node.js and Express.js) that handles business logic, validates user inputs, and communicates with the database.
 - **API (Application Programming Interface):** A set of rules and contracts that allows two different software programs (in this case, your browser frontend and your Express backend) to talk to each other and exchange data.
-- **REST API (Representational State Transfer API):** An architectural style for web services that uses standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) and URLs to perform actions on resources (such as `/api/clubs`). Data is exchanged as JSON.
+- **REST API (Representational State Transfer API):** An architectural style for web services that uses standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) and URLs to perform actions on resources (such as `/api/clubs` and `/api/memberships`). Data is exchanged as JSON.
 - **Database:** A software system designed to store, manage, and persist data permanently so information is not lost when the web server restarts (we use MongoDB).
 
 ---
@@ -37,9 +37,9 @@ This guide is written in clear, simple English to help you confidently explain y
 HTTP request methods describe what action the client wants the server to perform:
 
 - **`GET`:** Used to retrieve data from the server without modifying anything on the server.
-  - *Example in our project:* `GET /api/clubs` fetches all clubs for the directory; `GET /api/clubs/:id` fetches one club.
+  - *Example in our project:* `GET /api/clubs` fetches all clubs for the directory; `GET /api/clubs/:id` fetches one club; `GET /api/memberships?clubId=...` fetches members.
 - **`POST`:** Used to send new data to the server to create a new resource.
-  - *Example in our project:* `POST /api/clubs` sends new club form data to insert a document in MongoDB.
+  - *Example in our project:* `POST /api/clubs` sends new club form data; `POST /api/memberships` registers a student member.
 - **`PUT`:** Used to replace or update an existing resource on the server.
   - *Example in our project:* `PUT /api/clubs/:id` updates an existing club record.
 - **`DELETE`:** Used to permanently remove a specified resource from the server.
@@ -53,14 +53,14 @@ The frontend uses the browser's native **Fetch API** with `async/await` syntax t
 
 ### Code Pattern from `frontend/js/api.js`:
 ```javascript
-// Example: Sending a POST request to create a new club
-async function createClub(clubData) {
-  const response = await fetch('/api/clubs', {
+// Example: Sending a POST request to join a club
+async function joinClub(membershipData) {
+  const response = await fetch('/api/memberships', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json' // Tells backend we are sending JSON
     },
-    body: JSON.stringify(clubData) // Converts JavaScript object to JSON string
+    body: JSON.stringify(membershipData) // Converts JavaScript object to JSON string
   });
 
   const data = await response.json(); // Parses JSON response from server
@@ -76,10 +76,10 @@ async function createClub(clubData) {
 
 ## 6. How MongoDB and Mongoose Are Used
 
-- **MongoDB:** A NoSQL, document-oriented database. Instead of rows and tables, it stores data in flexible, JSON-like structures called documents inside collections (`clubs`).
+- **MongoDB:** A NoSQL, document-oriented database. Instead of rows and tables, it stores data in flexible, JSON-like structures called documents inside collections (`clubs` and `memberships`).
 - **Mongoose:** An **ODM (Object Data Modeling)** library for Node.js. It acts as a translator between JavaScript code and MongoDB.
   - **Schema:** Defines the structure and rules for documents (e.g. `name` must be a string, `description` is required).
-  - **Model:** A wrapper on top of the schema that provides built-in query methods like `Club.find()`, `Club.create()`, `Club.findByIdAndUpdate()`, and `Club.findByIdAndDelete()`.
+  - **Model:** A wrapper on top of the schema that provides built-in query methods like `Club.find()`, `Club.create()`, `Membership.findOne()`, and `Membership.create()`.
 
 ### Code Pattern from `backend/models/Club.js`:
 ```javascript
@@ -96,6 +96,25 @@ const clubSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Club', clubSchema);
+```
+
+### Code Pattern from `backend/models/Membership.js` (Compound Unique Index):
+```javascript
+const mongoose = require('mongoose');
+
+const membershipSchema = new mongoose.Schema({
+  clubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Club', required: true },
+  studentName: { type: String, required: true, trim: true },
+  studentId: { type: String, required: true, uppercase: true, trim: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
+  joinedAt: { type: Date, default: Date.now }
+});
+
+// Database-level duplicate check: Compound unique index prevents the same student ID
+// from registering for the same club more than once in MongoDB
+membershipSchema.index({ clubId: 1, studentId: 1 }, { unique: true });
+
+module.exports = mongoose.model('Membership', membershipSchema);
 ```
 
 ---
@@ -130,8 +149,7 @@ If you insert database values with `innerHTML`, malicious users could input `<sc
 
 ## 9. The Complete Request Flow: From Button Click to Screen Update
 
-Here is the exact lifecycle to explain to the examiner:
-
+### A. Creating a Club Flow:
 ```
 1. User clicks "Create Club" button in add-club.html
    ↓
@@ -159,6 +177,34 @@ Here is the exact lifecycle to explain to the examiner:
    Appends them to the DOM for immediate user feedback.
 ```
 
+### B. Joining a Club Flow:
+```
+1. User clicks "Join Club" button on club-details.html
+   ↓
+2. JavaScript dynamically constructs Join Modal:
+   Creates backdrop, form, inputs (studentName, studentId, email).
+   Attaches submit event listener.
+   ↓
+3. Client-side Validation:
+   Checks non-empty fields, valid email regex, and minimum ID length.
+   Disables submit button to prevent double-click.
+   ↓
+4. Fetch API:
+   Sends POST /api/memberships with { clubId, studentName, studentId, email }.
+   ↓
+5. Backend Logic Check:
+   Membership.findOne({ clubId, studentId: normalizedStudentId }).
+   If student already joined, returns 400 Bad Request with "Already registered".
+   ↓
+6. Database Constraint Check:
+   If new, Membership.create() runs.
+   MongoDB's compound unique index { clubId: 1, studentId: 1 } guarantees uniqueness.
+   ↓
+7. UI Response:
+   On success: In-modal success message displayed; member list refreshed via DOM without reloading page!
+   On error: Clear error banner shown in modal.
+```
+
 ---
 
 ## 10. Purpose of Each Important Project File
@@ -170,34 +216,36 @@ Campus_Club_Management/
 ├── backend/
 │   ├── config/db.js          # Establishes MongoDB connection via Mongoose
 │   ├── models/Club.js        # Mongoose Schema and Model definition for Club entity
+│   ├── models/Membership.js  # Mongoose Schema for Memberships with compound unique index
 │   ├── routes/clubRoutes.js  # Express REST API routes for CRUD (GET, POST, PUT, DELETE)
+│   ├── routes/membershipRoutes.js # REST API routes for joining clubs and listing members
 │   ├── server.js             # Express application entry point; serves static frontend & API
-│   ├── seed.js               # Utility script to populate database with sample campus clubs
-│   └── test-api.js           # Automated smoke test verifying all 5 API endpoints
+│   ├── seed.js               # Utility script to populate database with sample clubs & members
+│   └── test-api.js           # Automated smoke test verifying all 11 API endpoints
 ├── frontend/
 │   ├── index.html            # Dashboard showing real-time total clubs, metrics & recent clubs
 │   ├── clubs.html            # Clubs directory with search and category filtering
 │   ├── add-club.html         # Form to register a new campus club
 │   ├── edit-club.html        # Form to edit an existing club using URL query parameter (?id=...)
-│   ├── club-details.html     # Detailed view of a single club's schedule and leadership
+│   ├── club-details.html     # Detailed view of a single club, Join Club modal & registered members
 │   ├── about.html            # Architecture and system documentation page
 │   ├── css/style.css         # Custom university design system (responsive CSS Grid/Flexbox)
 │   └── js/
-│       ├── api.js            # Reusable fetch client functions (GET, POST, PUT, DELETE)
+│       ├── api.js            # Reusable fetch client functions (clubs & memberships)
 │       ├── dom.js            # DOM helpers: showAlert, showLoading, showEmptyState, modal
 │       ├── app.js            # Common script for active navigation highlight and footer year
 │       ├── dashboard.js      # Dashboard data fetching and DOM rendering for index.html
 │       ├── clubs.js          # Directory rendering, search filtering, and deletion logic
 │       ├── add-club.js       # Form validation and POST handler for add-club.html
 │       ├── edit-club.js      # Pre-filling and PUT update handler for edit-club.html
-│       └── club-details.js   # Single club fetching and DOM presentation for club-details.html
+│       └── club-details.js   # Single club fetching, Join Club modal & membership DOM rendering
 ├── README.md                 # Full project documentation and setup instructions
 └── VIVA_PREPARATION.md       # Complete viva question & answer reference
 ```
 
 ---
 
-## 11. Top 10 Viva Questions & Simple Answers
+## 11. Top 12 Viva Questions & Simple Answers
 
 ### Q1: Why did you not use a frontend framework like React?
 > **Answer:** "For this first evaluation, we wanted to demonstrate a solid understanding of fundamental web standards—semantic HTML5, modern CSS3, the native Fetch API, and direct DOM manipulation. Doing this in Vanilla JavaScript proves we understand how the browser works under the hood before adding framework abstractions."
@@ -217,8 +265,8 @@ Campus_Club_Management/
 ### Q6: What status codes does your REST API return and why?
 > **Answer:**
 > - `200 OK` for successful data retrieval (`GET`), updates (`PUT`), or deletions (`DELETE`).
-> - `201 Created` when a new club is created (`POST`).
-> - `400 Bad Request` when required fields are missing or the ID is not a valid 24-character hexadecimal MongoDB ObjectId.
+> - `201 Created` when a new club or membership is created (`POST`).
+> - `400 Bad Request` when required fields are missing, student already joined, or ID format is invalid.
 > - `404 Not Found` when a requested club ID does not exist in the database.
 > - `500 Internal Server Error` for unexpected server or database failures.
 
@@ -226,17 +274,23 @@ Campus_Club_Management/
 > **Answer:** "`appendChild()` adds a new element to the end of a parent's children. `replaceChildren()` first removes all existing children from the parent element and then inserts the new elements. We use `replaceChildren()` when updating search results or loading new cards so old cards don't remain duplicated on the screen."
 
 ### Q8: What is Mongoose validation and where is it checked?
-> **Answer:** "Mongoose validation is defined in `backend/models/Club.js` using schema rules like `required: true`, `minlength`, and enum options for categories and days. It is checked on the server whenever `Club.create()` or `Club.findByIdAndUpdate({ runValidators: true })` runs. We also have client-side validation in the browser for immediate user feedback."
+> **Answer:** "Mongoose validation is defined in `backend/models/Club.js` and `Membership.js` using schema rules like `required: true`, `minlength`, `match` regex, and enum options. It is checked on the server whenever `create()` or `findByIdAndUpdate({ runValidators: true })` runs. We also have client-side validation in the browser for immediate user feedback."
 
 ### Q9: Why is `Date.now` passed as a reference rather than `Date.now()` in the schema default?
-> **Answer:** "If we wrote `Date.now()`, the timestamp would be evaluated once when the server starts up and every document would get the exact same time. Passing `Date.now` as a function reference ensures Mongoose executes the function at the exact instant each individual club document is created."
+> **Answer:** "If we wrote `Date.now()`, the timestamp would be evaluated once when the server starts up and every document would get the exact same time. Passing `Date.now` as a function reference ensures Mongoose executes the function at the exact instant each individual document is created."
 
 ### Q10: How do you prevent duplicate form submissions?
-> **Answer:** "As soon as the user submits the form, we set `submitBtn.disabled = true` and change the button label to 'Saving Club...'. Once the asynchronous `fetch()` call finishes in the `finally` block, we re-enable the button."
+> **Answer:** "As soon as the user submits the form, we set `submitBtn.disabled = true` and change the button label to 'Submitting...'. Once the asynchronous `fetch()` call finishes in the `finally` block, we re-enable the button."
+
+### Q11: How did you implement the "Join Club" feature and prevent duplicate memberships?
+> **Answer:** "On the Club Details page, clicking 'Join Club' opens a modal created via direct DOM manipulation. The user inputs their student name, student ID, and email. When submitted, the backend verifies if that student ID already exists for that specific `clubId`. In addition, MongoDB enforces a **compound unique index** on `(clubId + studentId)` at the database level. If a student tries to join twice, the server returns 400 Bad Request with a clear explanation."
+
+### Q12: What is a compound unique index in MongoDB and why is it superior to only doing a check in JavaScript?
+> **Answer:** "A compound unique index indexes multiple fields together—in our case `{ clubId: 1, studentId: 1 }, { unique: true }`. A student can join different clubs, but cannot join the same club twice. Having this in MongoDB is superior to only checking in JavaScript because it prevents race conditions if two identical requests arrive simultaneously at the server."
 
 ---
 
-## 12. Actual Code Examples of Each CRUD Operation in This Project
+## 12. Actual Code Examples of Each CRUD & Membership Operation
 
 ### 1. CREATE: Adding a New Club
 - **Backend Route (`backend/routes/clubRoutes.js`):**
@@ -302,4 +356,25 @@ Campus_Club_Management/
     allClubs = allClubs.filter(c => c._id !== id);
     renderClubs(allClubs);
   });
+  ```
+
+### 5. JOIN CLUB & MEMBERSHIPS (Membership Creation & Retrieval)
+- **Backend Route (`backend/routes/membershipRoutes.js`):**
+  ```javascript
+  router.post('/', async (req, res) => {
+    const { clubId, studentName, studentId, email } = req.body;
+    // Duplicate check in backend logic:
+    const existing = await Membership.findOne({ clubId, studentId: studentId.trim().toUpperCase() });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'This student ID is already registered for this club.' });
+    }
+    const newMembership = await Membership.create({ clubId, studentName, studentId, email });
+    res.status(201).json({ success: true, message: 'Joined successfully!', data: newMembership });
+  });
+  ```
+- **Frontend Trigger (`frontend/js/club-details.js`):**
+  ```javascript
+  const result = await joinClub({ clubId: club._id, studentName, studentId, email });
+  showAlert(modalAlertContainer, result.message, 'success');
+  loadMembers(club._id, membershipSection, club); // Refreshes member list in place via DOM
   ```

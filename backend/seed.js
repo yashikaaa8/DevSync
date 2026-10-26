@@ -13,6 +13,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Club = require('./models/Club');
+const Membership = require('./models/Membership');
 
 const sampleClubs = [
   {
@@ -69,11 +70,16 @@ const seedData = async () => {
   try {
     await connectDB();
 
-    console.log('[Seed] Clearing existing clubs and indexes in database...');
+    console.log('[Seed] Clearing existing clubs and memberships in database...');
     try {
       await mongoose.connection.collection('clubs').drop();
     } catch (err) {
       // Collection might not exist yet; safe to ignore
+    }
+    try {
+      await mongoose.connection.collection('memberships').drop();
+    } catch (err) {
+      // safe to ignore
     }
 
     console.log('[Seed] Inserting sample campus clubs...');
@@ -83,6 +89,24 @@ const seedData = async () => {
     createdClubs.forEach((club, index) => {
       console.log(`   ${index + 1}. [${club.category}] ${club.name} (President: ${club.president})`);
     });
+
+    if (createdClubs.length > 0) {
+      await Membership.create([
+        {
+          clubId: createdClubs[0]._id,
+          studentName: 'Dev Patel',
+          studentId: 'STU202401',
+          email: 'dev.patel@campus.edu'
+        },
+        {
+          clubId: createdClubs[0]._id,
+          studentName: 'Isha Mehra',
+          studentId: 'STU202402',
+          email: 'isha.mehra@campus.edu'
+        }
+      ]);
+      console.log('[Seed] Added sample memberships for ByteCrafters Coding Club.');
+    }
 
     console.log('[Seed] Seeding completed.');
     process.exit(0);

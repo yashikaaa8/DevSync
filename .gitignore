@@ -14,6 +14,7 @@ Thumbs.db
 data/
 db/
 test_db/
+bin/
 
 # Office temporary files
 ~$*
