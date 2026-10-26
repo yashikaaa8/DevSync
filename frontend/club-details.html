@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Club Management System - Club Details</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand-link">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <span>Campus Clubs</span>
+          <span class="brand-subtitle">Student Portal</span>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-item"><a href="index.html">Home</a></li>
+          <li class="nav-item"><a href="clubs.html">Clubs Directory</a></li>
+          <li class="nav-item"><a href="add-club.html">+ Add Club</a></li>
+          <li class="nav-item"><a href="about.html">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <div id="details-alert"></div>
+
+    <!-- Details View Container (Populated dynamically via club-details.js using DOM manipulation) -->
+    <div id="club-details-container">
+      <!-- Loading or club details card injected here -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <div class="footer-brand">Campus Club Management System</div>
+        <p style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+          College Project — First Evaluation Version
+        </p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="clubs.html">Directory</a></li>
+        <li><a href="add-club.html">Add Club</a></li>
+        <li><a href="about.html">About & Viva Prep</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <span>Built with Node.js, Express, MongoDB & Vanilla JavaScript</span>
+      <span>&copy; <span id="footer-year">2026</span> Campus Club Portal</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/dom.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/club-details.js"></script>
+</body>
+</html>

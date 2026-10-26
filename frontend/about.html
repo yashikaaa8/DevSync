@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Club Management System - About & Architecture</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand-link">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <span>Campus Clubs</span>
+          <span class="brand-subtitle">Student Portal</span>
+        </div>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-item"><a href="index.html">Home</a></li>
+          <li class="nav-item"><a href="clubs.html">Clubs Directory</a></li>
+          <li class="nav-item"><a href="add-club.html">+ Add Club</a></li>
+          <li class="nav-item"><a href="about.html" class="active">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <div class="about-hero">
+      <span class="badge badge-academic" style="margin-bottom: 0.75rem;">System Documentation</span>
+      <h1 class="page-title" style="font-size: 2.2rem;">About the Campus Club Management System</h1>
+      <p class="page-subtitle" style="font-size: 1.05rem; margin-top: 0.5rem;">
+        An academic full-stack project built for demonstration of RESTful APIs,
+        explicit direct DOM manipulation, and database persistence.
+      </p>
+    </div>
+
+    <!-- Overview & Objectives Grid -->
+    <div class="about-grid">
+      <!-- Purpose Card -->
+      <div class="about-card">
+        <h2 class="about-card-title">🎯 Project Purpose</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          In many universities, student club information is scattered across physical notice boards,
+          social media groups, and spreadsheets.
+        </p>
+        <p style="color: var(--text-secondary);">
+          This web application centralizes club profiles, leadership details, and meeting schedules
+          into a single, clean platform where student activities can be managed seamlessly.
+        </p>
+      </div>
+
+      <!-- Core Features Card -->
+      <div class="about-card">
+        <h2 class="about-card-title">⚡ Core Features</h2>
+        <ul style="padding-left: 1.25rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.5rem;">
+          <li><strong>Real-time Dashboard:</strong> Fetches live counts and featured clubs from MongoDB.</li>
+          <li><strong>Clubs Directory:</strong> Dynamic grid with instant search and category filtering.</li>
+          <li><strong>Full CRUD Operations:</strong> Create, Read, Update, and Delete clubs via REST API.</li>
+          <li><strong>Direct DOM Manipulation:</strong> No frontend frameworks; pure vanilla JavaScript.</li>
+          <li><strong>Dual Validation:</strong> Input validation on both client-side and backend.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Architecture & Request Flow -->
+    <div class="about-card" style="margin-bottom: 3rem;">
+      <h2 class="about-card-title">🔄 Full-Stack Request Flow (Frontend → Backend → Database)</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Here is how data travels through the system when a user interacts with the application:
+      </p>
+
+      <div class="flow-step-box">
+        <span class="flow-step-number">Step 1: User Action in Browser (Frontend)</span>
+        <br>
+        The student submits a form or clicks an action button. An event listener attached via
+        <code>element.addEventListener()</code> captures the event and prevents default page reload.
+      </div>
+
+      <div class="flow-step-box">
+        <span class="flow-step-number">Step 2: Fetch API Dispatch (HTTP)</span>
+        <br>
+        Vanilla JavaScript initiates an asynchronous request using <code>fetch('/api/clubs', { method, body })</code>
+        carrying JSON formatted data across HTTP.
+      </div>
+
+      <div class="flow-step-box">
+        <span class="flow-step-number">Step 3: Express Routing & Validation (Backend)</span>
+        <br>
+        Express parses the request body using <code>express.json()</code>. The router handles the endpoint,
+        validates the input parameters, and passes the operation to the Mongoose ODM.
+      </div>
+
+      <div class="flow-step-box">
+        <span class="flow-step-number">Step 4: Mongoose & MongoDB Persistence (Database)</span>
+        <br>
+        Mongoose executes the operation (e.g. <code>Club.find()</code>, <code>Club.create()</code>,
+        <code>Club.findByIdAndUpdate()</code>, or <code>Club.findByIdAndDelete()</code>) on the <code>campus_club_db</code> database.
+      </div>
+
+      <div class="flow-step-box">
+        <span class="flow-step-number">Step 5: JSON Response & Direct DOM Rendering</span>
+        <br>
+        Express returns an HTTP status code (200, 201, 400, 404, or 500) and JSON response. The frontend
+        receives the data and dynamically builds DOM nodes using <code>document.createElement()</code>,
+        assigns values via <code>element.textContent</code>, and mounts them with <code>element.replaceChildren()</code>.
+      </div>
+    </div>
+
+    <!-- Technology Stack Table -->
+    <div class="about-card">
+      <h2 class="about-card-title">🛠️ Technologies Used</h2>
+      <table class="tech-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Role in Project</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend Markup</strong></td>
+            <td>HTML5</td>
+            <td>Semantic structure of all six application pages.</td>
+          </tr>
+          <tr>
+            <td><strong>Styling</strong></td>
+            <td>CSS3 (Custom)</td>
+            <td>Responsive university theme, CSS Grid, Flexbox, variables, and transitions without frameworks.</td>
+          </tr>
+          <tr>
+            <td><strong>Client Scripting</strong></td>
+            <td>Vanilla JavaScript (ES6+)</td>
+            <td>Asynchronous Fetch API calls, event listeners, and explicit direct DOM manipulation.</td>
+          </tr>
+          <tr>
+            <td><strong>Runtime</strong></td>
+            <td>Node.js (v22+)</td>
+            <td>Server-side JavaScript runtime executing the backend application.</td>
+          </tr>
+          <tr>
+            <td><strong>Web Framework</strong></td>
+            <td>Express.js</td>
+            <td>REST API routing, JSON middleware, static asset serving, and HTTP status handling.</td>
+          </tr>
+          <tr>
+            <td><strong>Database</strong></td>
+            <td>MongoDB</td>
+            <td>Document-oriented NoSQL database storing club records in BSON format.</td>
+          </tr>
+          <tr>
+            <td><strong>ODM</strong></td>
+            <td>Mongoose</td>
+            <td>Schema definition, field-level validation, and model queries.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <div class="footer-brand">Campus Club Management System</div>
+        <p style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+          College Project — First Evaluation Version
+        </p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="clubs.html">Directory</a></li>
+        <li><a href="add-club.html">Add Club</a></li>
+        <li><a href="about.html">About & Viva Prep</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <span>Built with Node.js, Express, MongoDB & Vanilla JavaScript</span>
+      <span>&copy; <span id="footer-year">2026</span> Campus Club Portal</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/dom.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

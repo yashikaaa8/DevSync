@@ -1,0 +1,27 @@
+{
+  "name": "campus-club-management-system",
+  "version": "1.0.0",
+  "description": "Campus Club Management System - Academic First Evaluation Project",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "seed": "node backend/seed.js",
+    "test:api": "node backend/test-api.js"
+  },
+  "keywords": [
+    "campus",
+    "club-management",
+    "express",
+    "mongodb",
+    "mongoose",
+    "vanilla-js"
+  ],
+  "author": "College Student Evaluation",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}

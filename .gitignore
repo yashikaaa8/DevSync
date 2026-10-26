@@ -1,0 +1,19 @@
+# Node dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Logs and system files
+*.log
+.DS_Store
+Thumbs.db
+
+# Database storage folders if created locally
+data/
+db/
+test_db/
+
+# Office temporary files
+~$*

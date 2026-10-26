@@ -1,0 +1,17 @@
+{
+  "name": "campus-club-management-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Campus Club Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node seed.js",
+    "test:api": "node test-api.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}
